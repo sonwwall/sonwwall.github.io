@@ -12,7 +12,7 @@ const isProd = process.env.NODE_ENV === "production" || process.argv.includes("b
 
 // ✅ GitHub Pages 项目页： https://sonwwall.github.io/blog/
 const SITE = isProd ? "https://sonwwall.github.io" : "http://localhost:4321";
-const BASE = isProd ? "/blog" : "";
+const BASE = isProd ? "/" : "";
 
 export default defineConfig({
   output: "static",
