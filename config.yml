@@ -19,12 +19,12 @@ stalux:
     # 额外自定义头部内容（HTML字符串）
     anyhead: ""
   favicon: "/stalux.ico" # 网站图标路径，默认为根路径下
-  canonical: "https://stalux.needhelp.icu"
+  canonical: "https://sonwwall.github.io" # 规范化 URL，默认为 stalux.url
 
   author:
-    name: xingwangzhe
-    avatar: /avatar.png
-    bio: 博客主题Stalux
+    name: sonwwall
+    avatar: /avatar-dog.png
+    bio: "一个苦逼大学生，偶尔写点东西记录生活和技术。"
 
   navs:
     - title: 首页
@@ -98,7 +98,7 @@ stalux:
 
   footer:
     # 站点构建时间，用于计算运行时长
-    buildtime: "2025-05-01T10:00:00"
+    buildtime: "2026-03-02T10:00:00"
 
     # 版权信息
     copyright:
@@ -116,11 +116,11 @@ stalux:
       # ICP备案
       icp:
         enabled: false
-        number: "辽ICP备XXXXXXXX号"
+        number: "火星ICP备114514号"
       # 公安备案
       security:
         enabled: false
-        text: "辽公网安备 XXXXXXXXXXXX号"
+        text: "火星公网安备 10086号"
         number: "XXXXXXXXXXXX"
 
     # 徽章配置
