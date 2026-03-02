@@ -1,0 +1,65 @@
+---
+import PostList from "@components/stalux/posts/postList.astro";
+import TagHeader from "@components/stalux/tags/tagHeader.astro";
+import { getCollection, type CollectionEntry } from "astro:content";
+import Stalux from "@layouts/Stalux.astro";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+import Navs from "@components/stalux/layout/navs.astro";
+const stalux = (await getCollection("config"))[0].data;
+
+export async function getStaticPaths() {
+    const posts = await getCollection("posts", ({ data }) => !data.draft);
+    const tagMap = new Map<
+        string,
+        { posts: CollectionEntry<"posts">[]; latestTime: Date }
+    >();
+
+    for (const post of posts) {
+        const tags = post.data.tags ?? [];
+        const postTime = post.data.updated ?? post.data.date;
+        for (const t of tags) {
+            if (!tagMap.has(t)) {
+                tagMap.set(t, { posts: [], latestTime: postTime });
+            }
+            const entry = tagMap.get(t)!;
+            entry.posts.push(post);
+            if (postTime > entry.latestTime) {
+                entry.latestTime = postTime;
+            }
+        }
+    }
+
+    return Array.from(tagMap.entries()).map(([tag, entry]) => ({
+        params: { tag },
+        props: {
+            tag,
+            count: entry.posts.length,
+            posts: entry.posts,
+            lastUpdateDate: dayjs
+                .utc(entry.latestTime)
+                .format("YYYY年MM月DD日"),
+        },
+    }));
+}
+
+interface Props {
+    tag: string;
+    count: number;
+    posts: CollectionEntry<"posts">[];
+    lastUpdateDate: string;
+}
+
+const props = Astro.props as Props;
+---
+
+<Stalux
+    title={"标签: " + props.tag + " | " + stalux.title}
+    description={`浏览标签 ${props.tag} 下的 ${props.count} 篇文章，涵盖相关领域的深度思考与见解。最后更新于 ${props.lastUpdateDate}`}
+>
+    <div style="height: 3em;"></div>
+    <Navs />
+    <TagHeader type={"标签"} name={props.tag} count={props.count} />
+    <PostList posts={props.posts} />
+</Stalux>

@@ -1,0 +1,68 @@
+---
+import style from "@styles/components/posts/postCard.module.css";
+import { render } from "astro:content";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
+import type { CollectionEntry } from "astro:content";
+
+export interface Props {
+    post: CollectionEntry<"posts">;
+}
+
+const post = Astro.props.post;
+
+const { remarkPluginFrontmatter } = await render(post);
+// 描述：优先使用 remark 插件生成的描述（前125字符），如果没有则使用文章自身的 desc
+const description = remarkPluginFrontmatter.desc || post.data.desc || "";
+---
+
+<a href={`/posts/${post.data.abbrlink}`} class={style.post + " a-none"}>
+    <div class={style.postContainer}>
+        <h2 class={style.postTitle}>{post.data.title}</h2>
+        <div class={style.time}>
+            {
+                post.data.date && (
+                    <time class={style.postDate}>
+                        {dayjs.utc(post.data.date).format("YYYY年M月D日")}
+                    </time>
+                )
+            }
+            {
+                post.data.updated && (
+                    <time class={style.postUpdated}>
+                        {dayjs.utc(post.data.updated).format("YYYY年M月D日")}
+                    </time>
+                )
+            }
+        </div>
+        <div class={style.postDescription}>{description}</div>
+        <div class={style.postMeta}>
+            <div class={style.postTags}>
+                {
+                    post.data.tags?.map((tag) => (
+                        <a class="a-none" href={`/tags/${tag}`}>
+                            <div class={style.postTag}>{tag}</div>
+                        </a>
+                    ))
+                }
+            </div>
+            <div class={style.postCategories}>
+                {
+                    post.data.categories?.map((category) => (
+                        <a class="a-none" href={`/categories/${category}`}>
+                            <div class={style.postCategory}>{category}</div>
+                        </a>
+                    ))
+                }
+            </div>
+        </div>
+        <a
+            href={`/posts/${post.data.abbrlink}`}
+            class={style.readMore + " a-none"}
+        >
+            Read More
+        </a>
+    </div>
+</a>

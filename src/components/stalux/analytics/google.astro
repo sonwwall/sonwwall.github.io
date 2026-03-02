@@ -1,0 +1,30 @@
+---
+import { getCollection } from "astro:content";
+const configCollection = await getCollection("config");
+const config = configCollection[0];
+const gaID = config.data.head?.googleAnalyticsId;
+---
+
+<script
+    is:inline
+    async
+    src={`https://www.googletagmanager.com/gtag/js?id=${gaID}`}
+    type="text/javascript"></script>
+<script is:inline define:vars={{ gaID }}>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() {
+        dataLayer.push(arguments);
+    }
+    gtag("js", new Date());
+    gtag("config", gaID);
+
+    // 视图过渡后重新跟踪页面浏览（仅添加一次）
+    if (!window.__gtagListenerAdded) {
+        document.addEventListener("astro:page-load", () => {
+            gtag("event", "page_view", {
+                page_path: window.location.pathname,
+            });
+        });
+        window.__gtagListenerAdded = true;
+    }
+</script>

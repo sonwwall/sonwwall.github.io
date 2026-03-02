@@ -1,0 +1,36 @@
+---
+import { getCollection } from "astro:content";
+const configCollection = await getCollection("config");
+const config = configCollection[0];
+const id = config.data.head?.bingClarityId;
+---
+
+<script is:inline define:vars={{ id }}>
+    // 初始化 Clarity（仅执行一次）
+    if (!window.__clarityInitialized) {
+        (function (c, l, a, r, i, t, y) {
+            c[a] =
+                c[a] ||
+                function () {
+                    (c[a].q = c[a].q || []).push(arguments);
+                };
+            t = l.createElement(r);
+            t.async = 1;
+            t.src = "https://www.clarity.ms/tag/" + i;
+            y = l.getElementsByTagName(r)[0];
+            y.parentNode.insertBefore(t, y);
+        })(window, document, "clarity", "script", id);
+        window.__clarityInitialized = true;
+    }
+
+    // 按文档建议在导航完成后触发
+    if (!window.__clarityListenerAdded) {
+        document.addEventListener("astro:page-load", () => {
+            if (typeof window.clarity === "function") {
+                window.clarity("set", "page_path", window.location.pathname);
+                window.clarity("event", "page_view");
+            }
+        });
+        window.__clarityListenerAdded = true;
+    }
+</script>

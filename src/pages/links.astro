@@ -1,0 +1,16 @@
+---
+import LinkList from "@components/stalux/links/linkList.astro";
+import Navs from "@components/stalux/layout/navs.astro";
+import Stalux from "@layouts/Stalux.astro";
+import { getCollection } from "astro:content";
+import styles from "@styles/pages/links.module.css";
+const stalux = (await getCollection("config"))[0].data;
+---
+
+<Stalux title={stalux.title} description={stalux.description}>
+    <div style="height: 3em;"></div>
+    <Navs />
+    <h1 class={styles.title}>{stalux.links.title}</h1>
+    <div class={styles.description}>{stalux.links.description}</div>
+    <LinkList />
+</Stalux>

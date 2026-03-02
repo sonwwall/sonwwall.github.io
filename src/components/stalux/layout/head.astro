@@ -1,0 +1,103 @@
+---
+import { SEO } from "astro-seo";
+import { ClientRouter } from "astro:transitions";
+import { getCollection } from "astro:content";
+import VerCount from "@components/stalux/common/verCount.astro";
+import ConsoleBanner from "@components/stalux/common/ConsoleBanner.astro";
+import GoogleAnalytics from "@components/stalux/analytics/google.astro";
+import BingClarity from "@components/stalux/analytics/clarity.astro";
+import "@styles/base/init.css";
+import Umami from "@components/stalux/analytics/umami.astro";
+
+const staluxCollection = await getCollection("config");
+const stalux = staluxCollection[0];
+
+// Twitter 卡片类型定义
+export type TwitterCardType = "summary" | "summary_large_image";
+
+// 最小必要 SEO 配置
+export interface Props {
+  title: string;
+  description: string;
+}
+
+const props = Astro.props as Props;
+const effectiveTitle = props.title;
+const effectiveDescription = props.description;
+
+const canonicalBase = stalux.data.canonical || stalux.data.url;
+const canonicalUrl = canonicalBase
+  ? new URL(Astro.url.pathname, canonicalBase).href
+  : Astro.url.href;
+const faviconPath = stalux.data.favicon || "/favicon.ico";
+// 社交分享图片：默认使用作者头像
+const ogImagePath = stalux.data.author.avatar || faviconPath;
+const isNotFoundPage =
+  Astro.url.pathname === "/404" || Astro.url.pathname === "/404/";
+const resolvedNoindex = Boolean(stalux.data.noindex) || isNotFoundPage;
+const resolvedNofollow = Boolean(stalux.data.nofollow) || isNotFoundPage;
+
+const openGraphConfig = {
+  basic: {
+    title: effectiveTitle,
+    type: "website",
+    image: ogImagePath,
+    url: canonicalUrl,
+  },
+  optional: {
+    description: effectiveDescription,
+    locale: "zh_CN",
+  },
+};
+
+const twitterConfig = {
+  card: "summary_large_image" as TwitterCardType,
+  title: effectiveTitle,
+  description: effectiveDescription,
+  image: ogImagePath,
+  ...(stalux.data.twitterSite ? { site: stalux.data.twitterSite } : {}),
+};
+
+const extendedLink = [{ rel: "icon", href: faviconPath }];
+const extendedMeta = [
+  { name: "viewport", content: "width=device-width, initial-scale=1" },
+];
+
+const schema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  url: canonicalUrl,
+  name: effectiveTitle,
+  description: effectiveDescription,
+};
+const ldJson = JSON.stringify(schema);
+---
+
+<head transition:persist-props>
+  <meta charset="utf-8" />
+  <ClientRouter />
+  <SEO
+    title={effectiveTitle}
+    description={effectiveDescription}
+    canonical={canonicalUrl}
+    nofollow={resolvedNofollow}
+    noindex={resolvedNoindex}
+    openGraph={openGraphConfig}
+    twitter={twitterConfig}
+    extend={{
+      link: extendedLink,
+      meta: extendedMeta,
+    }}
+  />
+  {
+    stalux.data.head?.anyhead && (
+      <Fragment set:html={stalux.data.head.anyhead} />
+    )
+  }
+  {stalux.data.head?.googleAnalyticsId && <GoogleAnalytics />}
+  {stalux.data.head?.bingClarityId && <BingClarity />}
+  {stalux.data.head?.umami?.id && stalux.data.head?.umami?.url && <Umami />}
+  <script type="application/ld+json" set:html={ldJson} />
+  <VerCount />
+  <ConsoleBanner />
+</head>

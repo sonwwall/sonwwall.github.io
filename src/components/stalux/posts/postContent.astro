@@ -1,0 +1,135 @@
+---
+import { fade } from "astro:transitions";
+import style from "@styles/components/posts/postContent.module.css";
+import "@styles/components/markdown.css";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
+interface Props {
+    title: string;
+    date?: string;
+    updated?: string;
+    readingTime?: string;
+    wordCount?: number;
+    hasImage?: boolean;
+}
+
+const props = Astro.props as Props;
+
+// 格式化：若包含时间则显示 YYYY-MM-DD HH:mm:ss，否则退级为 YYYY-MM-DD
+const formatDateTime = (d?: string | Date) => {
+    if (!d) return "";
+    const dt = dayjs.utc(d);
+    if (!dt.isValid()) return "";
+    if (
+        dt.hour() === 0 &&
+        dt.minute() === 0 &&
+        dt.second() === 0 &&
+        dt.millisecond() === 0
+    ) {
+        return dt.format("YYYY-MM-DD");
+    }
+    return dt.format("YYYY-MM-DD HH:mm:ss");
+};
+---
+
+<article 
+    class={style.articleContent}
+    transition:name="post-content"
+    transition:animate={fade({ duration: "1.2s" })}>
+    <!-- Article Header -->
+    <header class={style.articleHeader}>
+        <h1 class={style.title}>{props.title}</h1>
+        <div class={style.metadata}>
+            {
+                props.date && (
+                    <time class={style.metaItem} datetime={props.date}>
+                        发布时间：
+                        {formatDateTime(props.date)}
+                    </time>
+                )
+            }
+
+            {
+                props.updated && (
+                    <span class={style.metaItem}>
+                        更新时间：
+                        {formatDateTime(props.updated)}
+                    </span>
+                )
+            }
+        </div>
+        {
+            (props.readingTime || true) && (
+                <div class={style.pageStats}>
+                    {props.readingTime && (
+                        <span class={style.readingTime}>
+                            🕒 阅读时间：{props.readingTime}
+                        </span>
+                    )}
+                    {props.wordCount && props.wordCount > 0 && (
+                        <span class={style.wordCount}>
+                            📝 字数：{props.wordCount}
+                        </span>
+                    )}
+                    <span id="vercount_container_page_pv">
+                        👀 阅读量：
+                        <span id="vercount_value_page_pv">Loading...</span>
+                    </span>
+                </div>
+            )
+        }
+    </header>
+
+    <!-- Article Body -->
+    <div class={style.body} data-pagefind-body>
+        <slot />
+    </div>
+</article>
+
+{
+    props.hasImage && (
+        <script>
+            import PhotoSwipeLightbox from "photoswipe/lightbox";
+            import PhotoSwipe from "photoswipe";
+
+            function enrichPhotoSwipeData() {
+                const container = document.querySelector("[data-pagefind-body]");
+                if (!container) return;
+
+                const links = container.querySelectorAll("a[data-pswp]");
+                links.forEach((link) => {
+                    const img = link.querySelector("img");
+                    if (!img) return;
+
+                    const tempImg = new Image();
+                    tempImg.onload = () => {
+                        link.setAttribute(
+                            "data-pswp-width",
+                            String(tempImg.naturalWidth),
+                        );
+                        link.setAttribute(
+                            "data-pswp-height",
+                            String(tempImg.naturalHeight),
+                        );
+                    };
+                    tempImg.src = img.src;
+                });
+            }
+
+            function initLightbox() {
+                enrichPhotoSwipeData();
+                const lightbox = new PhotoSwipeLightbox({
+                    gallery: "[data-pagefind-body]",
+                    children: "a[data-pswp]",
+                    pswpModule: PhotoSwipe,
+                    initialZoomLevel: "fill",
+                });
+                lightbox.init();
+            }
+
+            document.addEventListener("astro:page-load", initLightbox);
+        </script>
+    )
+}

@@ -1,0 +1,243 @@
+---
+import { getCollection, type CollectionEntry } from "astro:content";
+import styles from "@styles/components/archives/archivesList.module.css";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+dayjs.extend(utc);
+
+interface Props {
+    posts?: CollectionEntry<"posts">[];
+}
+
+const props = Astro.props as Props;
+const posts = props.posts ?? (await getCollection("posts"));
+const archivesByYearMonth: Record<
+    number,
+    Record<number, CollectionEntry<"posts">[]>
+> = {};
+const yearCounts: Record<number, number> = {};
+
+posts.forEach((post) => {
+    if (!post.data.date) return;
+    const date = dayjs.utc(post.data.date);
+    const year = date.year();
+    const month = date.month() + 1; // dayjs 月份从 0 开始
+    if (!archivesByYearMonth[year]) {
+        archivesByYearMonth[year] = {};
+        yearCounts[year] = 0;
+    }
+    if (!archivesByYearMonth[year][month]) {
+        archivesByYearMonth[year][month] = [];
+    }
+    archivesByYearMonth[year][month].push(post);
+    yearCounts[year] += 1;
+});
+
+// 对每个月内的文章按 date 字段降序排序
+Object.keys(archivesByYearMonth).forEach((year) => {
+    Object.keys(archivesByYearMonth[Number(year)]).forEach((month) => {
+        archivesByYearMonth[Number(year)][Number(month)].sort((a, b) => {
+            const da = dayjs.utc(a.data.date || 0).valueOf();
+            const db = dayjs.utc(b.data.date || 0).valueOf();
+            return db - da;
+        });
+    });
+});
+
+// 按年份降序排序 -
+const sortedYears = Object.keys(archivesByYearMonth)
+    .map(Number)
+    .sort((a: number, b: number) => b - a);
+---
+
+<div class={styles.archivesContainer}>
+    <div class={styles.pageHeader}>
+        <div class={styles.timelineContainer}>
+            {
+                sortedYears.length > 0 ? (
+                    sortedYears.map((year) => (
+                        <div
+                            class={styles.yearSection}
+                            data-year={String(year)}
+                        >
+                            <div class={styles.yearHeader}>
+                                <h2 class={styles.yearTitle}>{year}</h2>
+                                <div class={styles.yearCount}>
+                                    {yearCounts[year] ?? 0} 篇文章
+                                </div>
+                            </div>
+                            {Object.keys(archivesByYearMonth[year])
+                                .map(Number)
+                                .sort((a, b) => b - a) // 月份降序排列
+                                .map((month) => (
+                                    <div class={styles.monthSection}>
+                                        <h3 class={styles.monthTitle}>
+                                            {month}月
+                                        </h3>
+                                        <ul class={styles.postList}>
+                                            {archivesByYearMonth[year][
+                                                month
+                                            ].map((post) => (
+                                                <li class={styles.postItem}>
+                                                    <div
+                                                        class={styles.postDate}
+                                                    >
+                                                        {dayjs
+                                                            .utc(post.data.date)
+                                                            .format(
+                                                                "YYYY-MM-DD",
+                                                            )}
+                                                    </div>
+                                                    <a
+                                                        href={`/posts/${post.data.abbrlink}/`}
+                                                        class={styles.postLink}
+                                                    >
+                                                        {post.data.title}
+                                                    </a>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                ))}
+                        </div>
+                    ))
+                ) : (
+                    <div class={styles.noPosts}>暂无文章</div>
+                )
+            }
+        </div>
+
+        <!-- 懒加载指示器 -->
+        <div
+            id="lazyload-observer"
+            class={styles.lazyloadObserver}
+            style="display:none"
+        >
+            <div class={styles.loadingSpinner} data-loading-spinner>
+                <span class="dot"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+            </div>
+            <div class={styles.loadingText} data-loading-text>加载更多内容</div>
+        </div>
+        <slot name="main" />
+    </div>
+
+    <script>
+        // 懒加载实现（脚本与原始页面相同）
+        document.addEventListener("DOMContentLoaded", () => {
+            let visibleYears = 2;
+            // 通过数据属性选择，以便在使用 CSS 模块时不会破坏 JS
+            const yearSections = document.querySelectorAll("[data-year]");
+            const totalYears = yearSections.length;
+            const lazyloadObserver =
+                document.getElementById("lazyload-observer");
+
+            // 默认隐藏懒加载指示器，仅当还有未显示年份时才显示（避免在全部已加载时出现“加载更多内容”）
+            if (lazyloadObserver) {
+                if (totalYears > visibleYears) {
+                    (lazyloadObserver as HTMLElement).style.display = "flex";
+                } else {
+                    (lazyloadObserver as HTMLElement).style.display = "none";
+                }
+            }
+
+            const updateLoadingIndicator = (
+                isLoading: boolean,
+                isComplete: boolean,
+            ) => {
+                if (!lazyloadObserver) return;
+                const loadingText = lazyloadObserver.querySelector(
+                    "[data-loading-text]",
+                ) as HTMLElement;
+                const loadingSpinner = lazyloadObserver.querySelector(
+                    "[data-loading-spinner]",
+                ) as HTMLElement;
+                if (isComplete) {
+                    if (loadingText) loadingText.textContent = "已加载全部内容";
+                    if (loadingSpinner) loadingSpinner.style.display = "none";
+                    setTimeout(() => {
+                        if (lazyloadObserver) {
+                            (lazyloadObserver as HTMLElement).style.opacity =
+                                "0";
+                            setTimeout(() => {
+                                if (lazyloadObserver) {
+                                    (
+                                        lazyloadObserver as HTMLElement
+                                    ).style.display = "none";
+                                }
+                            }, 500);
+                        }
+                    }, 3000);
+                } else {
+                    if (loadingText)
+                        loadingText.textContent = isLoading
+                            ? "正在加载..."
+                            : "滚动加载更多";
+                }
+            };
+
+            const showYearSection = (index: number) => {
+                if (index >= 0 && index < totalYears && yearSections[index]) {
+                    const section = yearSections[index] as HTMLElement;
+                    section.style.display = "block";
+                    section.style.opacity = "0";
+                    setTimeout(() => {
+                        section.style.opacity = "1";
+                        section.style.transform = "translateY(0)";
+                    }, 50);
+                }
+            };
+            if (totalYears > 0) {
+                for (let i = 0; i < totalYears; i++) {
+                    if (i < visibleYears) {
+                        showYearSection(i);
+                    } else {
+                        (yearSections[i] as HTMLElement).style.display = "none";
+                    }
+                }
+                if (totalYears <= visibleYears && lazyloadObserver) {
+                    updateLoadingIndicator(false, true);
+                }
+            }
+
+            const observer = new IntersectionObserver(
+                (entries) => {
+                    entries.forEach((entry) => {
+                        if (entry.isIntersecting && visibleYears < totalYears) {
+                            updateLoadingIndicator(true, false);
+                            setTimeout(() => {
+                                showYearSection(visibleYears);
+                                visibleYears++;
+                                if (visibleYears >= totalYears) {
+                                    updateLoadingIndicator(false, true);
+                                } else {
+                                    updateLoadingIndicator(false, false);
+                                }
+                            }, 300);
+                        }
+                    });
+                },
+                {
+                    rootMargin: "300px",
+                    threshold: 0.1,
+                },
+            );
+
+            if (lazyloadObserver) {
+                observer.observe(lazyloadObserver);
+            } else {
+                console.warn("懒加载指示器元素未找到");
+            }
+
+            window.addEventListener("error", (e) => {
+                if (
+                    e.message.includes("lazyload") ||
+                    e.message.includes("observer")
+                ) {
+                    console.error("懒加载功能出现错误:", e);
+                }
+            });
+        });
+    </script>
+</div>

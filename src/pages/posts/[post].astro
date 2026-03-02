@@ -1,0 +1,90 @@
+---
+import Stalux from "@layouts/Stalux.astro";
+import PostLayout from "@layouts/PostLayout.astro";
+import { getCollection, type CollectionEntry, render } from "astro:content";
+
+import Navs from "@components/stalux/layout/navs.astro";
+
+interface Props {
+    post: CollectionEntry<"posts">;
+    prev?: { url: string; title: string };
+    next?: { url: string; title: string };
+}
+const stalux = (await getCollection("config"))[0].data;
+const props = Astro.props as Props;
+const { Content, headings, remarkPluginFrontmatter } = await render(props.post);
+// 从 remark 插件获取虚拟 frontmatter：阅读时间、字数、自动生成的描述
+const minutesRead = remarkPluginFrontmatter.minutesRead || "";
+const wordCount = remarkPluginFrontmatter.wordCount || 0;
+// 优先使用 remark 插件生成的描述（前125字符），如果没有则使用文章自身的 desc
+const autoDesc = remarkPluginFrontmatter.desc || props.post.data.desc || "";
+
+export async function getStaticPaths() {
+    const posts = await getCollection("posts");
+
+    // 按日期排序（降序）
+    const sortedPosts = posts.sort((a, b) => {
+        const dateA = a.data.date?.getTime() || 0;
+        const dateB = b.data.date?.getTime() || 0;
+        return dateB - dateA;
+    });
+
+    return sortedPosts.map((post, index) => {
+        const next = index > 0 ? sortedPosts[index - 1] : undefined;
+        const prev =
+            index < sortedPosts.length - 1 ? sortedPosts[index + 1] : undefined;
+
+        return {
+            params: { post: post.data.abbrlink },
+            props: {
+                post,
+                prev: prev
+                    ? {
+                          url: `/posts/${prev.data.abbrlink}`,
+                          title: prev.data.title,
+                      }
+                    : undefined,
+                next: next
+                    ? {
+                          url: `/posts/${next.data.abbrlink}`,
+                          title: next.data.title,
+                      }
+                    : undefined,
+            },
+        };
+    });
+}
+---
+
+<Stalux
+    title={props.post.data.title + " | " + stalux.title}
+    description={autoDesc}
+>
+    <div style="height: 3em;"></div>
+    <Navs />
+    <div style="height: 3em;"></div>
+    <PostLayout
+        title={props.post.data.title}
+        date={props.post.data.date
+            ? props.post.data.date.toISOString()
+            : undefined}
+        updated={props.post.data.updated
+            ? props.post.data.updated.toISOString()
+            : undefined}
+        readingTime={minutesRead}
+        tags={props.post.data.tags || []}
+        categories={props.post.data.categories || []}
+        headings={headings}
+        author={stalux.author.name}
+        authorAvatar={stalux.author.avatar}
+        prev={props.prev}
+        next={props.next}
+        cc={props.post.data.cc}
+        wordCount={wordCount}
+        hasMermaid={remarkPluginFrontmatter.hasMermaid}
+        hasKatex={remarkPluginFrontmatter.hasKatex}
+        hasImage={remarkPluginFrontmatter.hasImage}
+    >
+        <Content />
+    </PostLayout>
+</Stalux>
