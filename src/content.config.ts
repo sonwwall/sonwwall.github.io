@@ -9,7 +9,7 @@ import { z } from "astro/zod";
 // 4. 定义你的集合
 const posts = defineCollection({
   loader: glob({
-    pattern: ["*.{md,mdx}"],
+    pattern: ["**/*.{md,mdx}"],
     base: "stalux/posts/",
     generateId: ({ data }) => String(data["abbrlink"]),
     retainBody: false,
