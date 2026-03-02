@@ -1,7 +1,7 @@
 stalux:
-  title: Stalux博客主题
-  url: https://stalux.needhelp.icu
-  description: "博客主题Stalux - 为内容创作者提供的专业展示平台，支持多种自定义功能，包含评论系统集成、友情链接管理、社交媒体分享和丰富的SEO优化选项，让您的内容更具吸引力和可发现性。"
+  title: 外城的碎碎念处
+  url: https://sonwwall.github.io
+  description: "开了一个博客，记录一些碎碎念，欢迎来看看！"
   # canonical: # 源指向 默认为 stalux.url
   # twitterSite: # Twitter 站点
   # noindex: # 是否禁止搜索引擎索引 默认 false
@@ -57,7 +57,7 @@ stalux:
 
   mediaLinks:
     - icon: github
-      link: https://github.com/xingwangzhe/stalux
+      link: https://github.com/sonwwall
     - icon: bilibili
       link: https://bilibili.com/
     - icon: X
