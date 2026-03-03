@@ -21,7 +21,7 @@ desc: 一个围绕求职与实战的电商项目构想与落地计划。
 | --- | --- |
 | 微服务框架 | kitex |
 | 网络框架 | hz |
-| 数据库 | mysql，redis，postgresql，gorm |
+| 数据库 | mysql，redis，postgresql |
 | ORM | Gorm |
 | 认证/权限 | jwt，casbin |
 | 消息队列 | kafka |
