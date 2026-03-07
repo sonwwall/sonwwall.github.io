@@ -1,8 +1,8 @@
 ---
 title: 可观测性学习
 abbrlink: observability-learning-2026
-date: 2026-03-06T10:13:59
-updated: 2026-03-06T10:13:59
+date: 2026-03-07T21:40:59
+updated: 2026-03-07T21:40:59
 tags:
   - 可观测性
   - 学习
