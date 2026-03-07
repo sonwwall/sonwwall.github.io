@@ -7,7 +7,7 @@ tags:
   - 日报
   - 日常
 categories:
-  - daily
+  - 日常
 desc: 2026-03-03 的学习与进度日报。
 ---
 

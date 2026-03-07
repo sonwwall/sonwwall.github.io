@@ -8,7 +8,7 @@ tags:
   - 项目
   - 构想
 categories:
-  - daily
+  - 项目
 desc: 一个围绕求职与实战的电商项目构想与落地计划。
 ---
 

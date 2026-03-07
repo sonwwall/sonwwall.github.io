@@ -6,7 +6,7 @@ updated: 2026-03-02T21:00:00+08:00
 tags:
   - 日常
 categories:
-  - daily
+  - 日常
 ---
 
 # 第一篇博客

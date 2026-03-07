@@ -8,7 +8,7 @@ tags:
   - 规划
   - 学习
 categories:
-  - daily
+  - 日常
 desc: 新学期的学习、生活与成长目标规划。
 ---
 

@@ -8,7 +8,7 @@ tags:
   - 学习
   - 后端
 categories:
-  - project
+  - 八股
 desc: 可观测性体系学习记录，包括日志、指标与链路追踪。
 ---
 
